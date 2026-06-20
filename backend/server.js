@@ -18,7 +18,30 @@ const connection = new Pool({
     database: process.env.DB_DATABASE,
 });
 
-connection.connect().then(() => console.log("Connected"));
+connection.connect().then(() => {
+    console.log("Connected");
+
+    const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS users (
+            user_id SERIAL PRIMARY KEY,
+            user_name VARCHAR(255) NOT NULL,
+            user_email VARCHAR(255) UNIQUE NOT NULL,
+            user_password VARCHAR(255) NOT NULL,
+            verification_token VARCHAR(255),
+            status VARCHAR(50) DEFAULT 'unverified',
+            last_login_time TIMESTAMP
+        );
+    `;
+
+    connection.query(createTableQuery, (err, res) => {
+        if (err) {
+            console.error("Error initializing database table:", err.message);
+        } else {
+            console.log("Users table is ready and verified!");
+        }
+    });
+
+});
 
 
 
