@@ -4,11 +4,15 @@ const {Pool} = require("pg");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+// const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
+
 const crypto = require("crypto");
 
 app.use(cors());
 app.use(express.json());
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const connection = new Pool({
     host: process.env.DB_HOST,
@@ -50,14 +54,14 @@ app.listen(port, () => {
     console.log(`App running on port ${port}...`);
 });
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
+// const transporter = nodemailer.createTransport({
+//     host: process.env.SMTP_HOST,
+//     port: process.env.SMTP_PORT,
+//     auth: {
+//         user: process.env.SMTP_USER,
+//         pass: process.env.SMTP_PASS
+//     }
+// });
 
 function checkUserStatus(req, res, next) {
     const userId = req.query.adminId || req.body?.adminId;
@@ -93,18 +97,29 @@ app.post("/register", (req, res) => {
             const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
             const verificationLink = `${backendUrl}/verify?token=${token}`;
             
-            const mailOptions = {
-                from: '"Admin System" <noreply@itransitionproject.com>',
+            // const mailOptions = {
+            //     from: '"Admin System" <noreply@itransitionproject.com>',
+            //     to: email,
+            //     subject: 'Verify Your Account',
+            //     html: `<p>Thank you for registering. Please click the link below to verify your account:</p>
+            //     <a href="${verificationLink}">${verificationLink}</a>`
+            // };
+            
+            // transporter.sendMail(mailOptions, (mailErr, info) => {
+            //     if (mailErr) console.log("Email failed to send:", mailErr.message);
+            //     else console.log("Test email sent! View it at:", nodemailer.getTestMessageUrl(info));
+            // });
+
+            resend.emails.send({
+                from: 'onboarding@resend.dev', // Resend's default free sandbox domain
                 to: email,
                 subject: 'Verify Your Account',
                 html: `<p>Thank you for registering. Please click the link below to verify your account:</p>
                 <a href="${verificationLink}">${verificationLink}</a>`
-            };
-            
-            transporter.sendMail(mailOptions, (mailErr, info) => {
-                if (mailErr) console.log("Email failed to send:", mailErr.message);
-                else console.log("Test email sent! View it at:", nodemailer.getTestMessageUrl(info));
-            });
+            })
+            .then(info => console.log("Email successfully sent via Resend API!"))
+            .catch(mailErr => console.log("Email failed to send:", mailErr.message));
+
         } else {
             console.log(err.message);
             res.status(400).send(`Registration failed: ${err.message}`);
