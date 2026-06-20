@@ -4,7 +4,6 @@ const {Pool} = require("pg");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-// const nodemailer = require("nodemailer");
 const { Resend } = require('resend');
 
 const crypto = require("crypto");
@@ -54,15 +53,6 @@ app.listen(port, () => {
     console.log(`App running on port ${port}...`);
 });
 
-// const transporter = nodemailer.createTransport({
-//     host: process.env.SMTP_HOST,
-//     port: process.env.SMTP_PORT,
-//     auth: {
-//         user: process.env.SMTP_USER,
-//         pass: process.env.SMTP_PASS
-//     }
-// });
-
 function checkUserStatus(req, res, next) {
     const userId = req.query.adminId || req.body?.adminId;
 
@@ -82,7 +72,6 @@ function checkUserStatus(req, res, next) {
 }
 
 
-
 app.post("/register", (req, res) => {
     const { name, email, password } = req.body;
     const token = crypto.randomBytes(32).toString("hex");
@@ -97,21 +86,9 @@ app.post("/register", (req, res) => {
             const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
             const verificationLink = `${backendUrl}/verify?token=${token}`;
             
-            // const mailOptions = {
-            //     from: '"Admin System" <noreply@itransitionproject.com>',
-            //     to: email,
-            //     subject: 'Verify Your Account',
-            //     html: `<p>Thank you for registering. Please click the link below to verify your account:</p>
-            //     <a href="${verificationLink}">${verificationLink}</a>`
-            // };
-            
-            // transporter.sendMail(mailOptions, (mailErr, info) => {
-            //     if (mailErr) console.log("Email failed to send:", mailErr.message);
-            //     else console.log("Test email sent! View it at:", nodemailer.getTestMessageUrl(info));
-            // });
-
+          
             resend.emails.send({
-                from: 'onboarding@resend.dev', // Resend's default free sandbox domain
+                from: 'onboarding@resend.dev',
                 to: email,
                 subject: 'Verify Your Account',
                 html: `<p>Thank you for registering. Please click the link below to verify your account:</p>
